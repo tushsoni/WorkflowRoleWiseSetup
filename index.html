@@ -7,8 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        
+
+        :root {
+            --alt-dark-blue: #0d1b2a;
+            --alt-blue: #1a73e8;
+            --alt-bg: #f5f7fa;
+            --border-light: #e0e6ed;
+        }
+
+        body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--alt-bg); color: #333; overflow-x: hidden; }
+        .hidden { display: none !important; }
+
         /* Toggle Switch Custom Styles */
         .toggle-bg {
             transition: background-color 0.2s ease;
@@ -35,9 +44,45 @@
         .row-hidden {
             display: none;
         }
+        /* PERSISTENT HEADER */
+        .main-header { background: var(--alt-dark-blue); color: white; height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 1000; position: relative; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .corp-dropdown { background: white; color: #333; padding: 5px 15px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .profile-img { width: 32px; height: 32px; border-radius: 50%; background: #ccc; border: 1px solid white; }
+
+         /* BANNER & SEARCH (SCREEN 2) */
+        .banner { background: linear-gradient(to right, #89b4f7, #69a1ef); height: 80px; margin: 10px; border-radius: 5px; display: flex; align-items: center; padding-left: 30px; }
+        .search-bar-wrap { background: white; border-radius: 30px; display: flex; align-items: center; padding: 5px 15px; border: 1px solid #dcdcdc; max-width: 850px; margin: -25px auto 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-bar-wrap input { border: none; outline: none; flex: 1; padding: 10px; font-size: 14px; }
+        .gear-trigger { width: 34px; height: 34px; background: #1a73e8; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 18px; }
+        
+        /* GRIDS & LAYOUT */
+        .container { padding: 20px 40px; }
+        .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .manage-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
+
+        /* MANAGE ACCOUNT CARDS (SCREEN 3) */
+        .manage-card { background: white; border-radius: 12px; padding: 25px 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); cursor: pointer; transition: 0.2s; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .manage-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .manage-card img { width: 85px; height: 85px; margin-bottom: 20px; object-fit: contain; }
+        .manage-card span { font-size: 14px; color: #444; font-weight: 400; }
+
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 sm:p-8">
+
+        <header class="main-header">
+        <div style="font-weight: bold; font-size: 18px;">Altametrics <span style="font-weight: 300; font-size: 12px;">GROWTH</span></div>
+        <div class="nav-right">
+            <div id="nav-apps" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+                <span style="font-size:18px;">⠿</span> My Apps ▾
+            </div>
+            <div class="corp-dropdown">
+                <span style="color:var(--alt-blue)">🏪</span> Corporate Head ▾
+            </div>
+            <div class="profile-img"></div>
+        </div>
+    </header>
 
     <div class="max-w-7xl mx-auto">
         <header class="mb-8 border-b pb-4">
