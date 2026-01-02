@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Role wise Setup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Toggle Switch Custom Styles */
+        .toggle-bg {
+            transition: background-color 0.2s ease;
+        }
+        .toggle-dot {
+            transition: transform 0.2s ease;
+        }
+        input:checked + .toggle-bg {
+            background-color: #4f46e5; /* indigo-600 */
+        }
+        input:checked + .toggle-bg .toggle-dot {
+            transform: translateX(1.25rem);
+        }
+
+        /* Chevron rotation */
+        .chevron {
+            transition: transform 0.2s ease;
+        }
+        .collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        /* Hide rows when parent is collapsed */
+        .row-hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 border-b pb-4">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Workflow Role wise Setup</h1>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-stretch">
+                
+                <div class="flex-1 max-w-sm">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
+                    <select id="roleFilter" class="block w-full rounded-md border-gray-300 shadow-sm pl-4 pr-10 py-2.5 text-gray-900 border focus:border-indigo-500 focus:ring-indigo-500 appearance-none bg-white">
+                        <option value="All">All Roles</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Assistant Manager">Assistant Manager</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
+                </div>
+
+                <div class="flex-1 max-w-sm">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Task Group Status</label>
+                    <select id="statusFilter" class="block w-full rounded-md border-gray-300 shadow-sm pl-4 pr-10 py-2.5 text-gray-900 border focus:border-indigo-500 focus:ring-indigo-500 appearance-none bg-white">
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="workflowTable">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="py-3 px-6 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-1/5">Role / Group Name</th>
+                            <th class="py-3 px-6 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">Status</th>
+                            <th class="py-3 px-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">Group Status Toggle</th>
+                            <th class="py-3 px-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">Display Order</th>
+                            <th class="py-3 px-6 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-1/5">Task IID</th>
+                            <th class="py-3 px-6 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-1/5">Task Description</th>
+                            <th class="py-3 px-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">View Only</th>
+                            <th class="py-3 px-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">Edit</th>
+                            <th class="py-3 px-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider w-1/10">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Initial Data ---
+        const FOOD_LABOR_TASKS = [
+            { iid: "Ordering_IID", description: "Ordering", displayOrder: 1 },
+            { iid: "Receiving_IID", description: "Receiving", displayOrder: 2 },
+            { iid: "Transfer_IID", description: "Transfer", displayOrder: 3 },
+            { iid: "Waste_IID", description: "Waste", displayOrder: 4 },
+        ];
+
+        const PAYROLL_TASKS = [
+            { iid: "Punch_Exception", description: "Punch Exception", displayOrder: 5 },
+            { iid: "Review_Punches", description: "Review Punches", displayOrder: 6 },
+            { iid: "Misc_Pay", description: "Misc Pay", displayOrder: 7 },
+            { iid: "Approaching_OT", description: "Approaching OT", displayOrder: 8 },
+            { iid: "Payroll_Summary", description: "Payroll Summary", displayOrder: 9 },
+            { iid: "Unbalanced_Punches", description: "Unbalanced Punches", displayOrder: 10 },
+            { iid: "Mismatch_Punch", description: "Mismatch Punch", displayOrder: 11 },
+        ];
+
+        const BASE_TASK_GROUPS = [
+            { groupName: "Food Management", groupStatus: 'Active', tasks: FOOD_LABOR_TASKS },
+            { groupName: "Labor Management", groupStatus: 'Active', tasks: FOOD_LABOR_TASKS },
+            { groupName: "Payroll Management", groupStatus: 'Active', tasks: PAYROLL_TASKS },
+        ];
+
+        const ROLE_NAMES = ['Manager', 'Assistant Manager', 'Supervisor'];
+
+        let appData = ROLE_NAMES.map(roleName => ({
+            role: roleName,
+            id: roleName.replace(/\s/g, ''),
+            isExpanded: true,
+            taskGroups: BASE_TASK_GROUPS.map((group, gIdx) => ({
+                ...group,
+                id: `${roleName.replace(/\s/g, '')}-G-${gIdx}`,
+                isExpanded: true,
+                tasks: group.tasks.map(task => ({
+                    ...task,
+                    viewOnly: true,
+                    edit: false,
+                    isActive: true
+                }))
+            }))
+        }));
+
+        // --- UI Rendering ---
+
+        function createToggle(isActive, onChange) {
+            const container = document.createElement('label');
+            container.className = 'relative inline-flex items-center cursor-pointer justify-center';
+            
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'sr-only';
+            input.checked = isActive;
+            
+            // Fixed change handler to prevent bubbling and trigger re-render
+            input.addEventListener('change', (e) => {
+                e.stopPropagation();
+                onChange(input.checked);
+            });
+
+            const bg = document.createElement('div');
+            bg.className = `toggle-bg w-11 h-6 rounded-full flex items-center px-1 ${isActive ? 'bg-indigo-600' : 'bg-gray-200'}`;
+            
+            const dot = document.createElement('div');
+            dot.className = `toggle-dot bg-white w-4 h-4 rounded-full shadow-sm flex items-center justify-center transform transition-transform ${isActive ? 'translate-x-5' : ''}`;
+            
+            bg.appendChild(dot);
+            container.appendChild(input);
+            container.appendChild(bg);
+            return container;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const roleFilter = document.getElementById('roleFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            tbody.innerHTML = '';
+
+            appData.forEach(role => {
+                // Filter Role
+                if (roleFilter !== 'All' && role.role !== roleFilter) return;
+
+                // Filter Groups within Role
+                const visibleGroups = role.taskGroups.filter(group => {
+                    return statusFilter === 'All' || group.groupStatus === statusFilter;
+                });
+
+                if (visibleGroups.length === 0) return;
+
+                // 1. Role Header Row
+                const roleRow = document.createElement('tr');
+                roleRow.className = 'bg-indigo-50 hover:bg-indigo-100 cursor-pointer border-b border-indigo-200';
+                roleRow.onclick = () => { role.isExpanded = !role.isExpanded; renderTable(); };
+                
+                roleRow.innerHTML = `
+                    <td colspan="9" class="py-3 px-6 text-left font-extrabold text-indigo-700 whitespace-nowrap">
+                        <div class="flex items-center space-x-2">
+                            <span class="chevron inline-block transition-transform ${role.isExpanded ? '' : '-rotate-90'}">▼</span>
+                            <span>Role: ${role.role} (${visibleGroups.length} Task Groups)</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(roleRow);
+
+                if (role.isExpanded) {
+                    visibleGroups.forEach(group => {
+                        // 2. Group Header Row
+                        const groupRow = document.createElement('tr');
+                        groupRow.className = 'bg-white hover:bg-gray-50 border-b border-gray-100 cursor-pointer';
+                        groupRow.onclick = () => { group.isExpanded = !group.isExpanded; renderTable(); };
+
+                        const groupNameCell = document.createElement('td');
+                        groupNameCell.className = 'py-3 px-6 text-left font-semibold text-gray-800';
+                        groupNameCell.innerHTML = `
+                            <div class="flex items-center space-x-2 pl-6">
+                                <span class="chevron text-indigo-400 inline-block transition-transform ${group.isExpanded ? '' : '-rotate-90'}">▼</span>
+                                <span>${group.groupName}</span>
+                            </div>
+                        `;
+
+                        const statusCell = document.createElement('td');
+                        statusCell.className = 'py-3 px-6 text-left';
+                        statusCell.innerHTML = `
+                            <span class="px-3 py-1 text-xs font-medium rounded-full ${group.groupStatus === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${group.groupStatus}
+                            </span>
+                        `;
+
+                        const toggleCell = document.createElement('td');
+                        toggleCell.className = 'py-3 px-6 text-center';
+                        // Stop click from bubbling to groupRow.onclick
+                        toggleCell.onclick = (e) => e.stopPropagation(); 
+                        
+                        toggleCell.appendChild(createToggle(group.groupStatus === 'Active', (val) => {
+                            group.groupStatus = val ? 'Active' : 'Inactive';
+                            renderTable();
+                        }));
+
+                        const fillerCell = document.createElement('td');
+                        fillerCell.colSpan = 6;
+                        fillerCell.className = 'py-3 px-6 text-right text-sm text-gray-500';
+                        fillerCell.innerText = `(Group Level - ${group.tasks.length} Tasks Below)`;
+
+                        groupRow.appendChild(groupNameCell);
+                        groupRow.appendChild(statusCell);
+                        groupRow.appendChild(toggleCell);
+                        groupRow.appendChild(fillerCell);
+                        tbody.appendChild(groupRow);
+
+                        // 3. Task Rows
+                        if (group.isExpanded) {
+                            group.tasks.forEach(task => {
+                                const taskRow = document.createElement('tr');
+                                taskRow.className = 'bg-gray-50 border-b border-gray-100 hover:bg-gray-100 text-sm';
+                                
+                                taskRow.innerHTML = `
+                                    <td class="py-2 px-6"></td>
+                                    <td class="py-2 px-6 text-left pl-12 font-medium text-gray-600">${group.groupName}</td>
+                                    <td class="py-2 px-6 text-center text-gray-400">-</td>
+                                    <td class="py-2 px-6 text-center text-gray-600">${task.displayOrder}</td>
+                                    <td class="py-2 px-6 text-left font-mono text-xs text-gray-500">${task.iid}</td>
+                                    <td class="py-2 px-6 text-left text-gray-700">${task.description}</td>
+                                `;
+
+                                // Toggles for Task
+                                const viewOnlyCell = document.createElement('td');
+                                viewOnlyCell.className = 'py-2 px-6 text-center';
+                                viewOnlyCell.appendChild(createToggle(task.viewOnly, (v) => { task.viewOnly = v; renderTable(); }));
+
+                                const editCell = document.createElement('td');
+                                editCell.className = 'py-2 px-6 text-center';
+                                editCell.appendChild(createToggle(task.edit, (v) => { task.edit = v; renderTable(); }));
+
+                                const activeCell = document.createElement('td');
+                                activeCell.className = 'py-2 px-6 text-center';
+                                activeCell.appendChild(createToggle(task.isActive, (v) => { task.isActive = v; renderTable(); }));
+
+                                taskRow.appendChild(viewOnlyCell);
+                                taskRow.appendChild(editCell);
+                                taskRow.appendChild(activeCell);
+                                tbody.appendChild(taskRow);
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-gray-500">No results found matching filters.</td></tr>`;
+            }
+        }
+
+        // --- Listeners ---
+        document.getElementById('roleFilter').addEventListener('change', renderTable);
+        document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+        // Initial Load
+        window.onload = renderTable;
+    </script>
+</body>
+</html>
