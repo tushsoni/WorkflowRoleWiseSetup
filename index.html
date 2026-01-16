@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Role wise Setup - Altametrics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --alt-sidebar: #0d1b2a;
+            --alt-top-nav: #0d1b2a;
+            --alt-bg: #f3f4f6;
+            --alt-accent: #822e5f;
+            --alt-blue: #3b82f6;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--alt-bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 50px; background-color: var(--alt-sidebar); display: flex; flex-direction: column; align-items: center; padding-top: 10px; flex-shrink: 0; position: relative; }
+        .sidebar-logo { width: 32px; height: 32px; background: #822e5f; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        .sidebar-icon { color: white; margin-bottom: 5px; cursor: pointer; opacity: 0.7; padding: 12px; width: 100%; text-align: center; font-size: 16px; transition: 0.2s; }
+        .sidebar-icon:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+        .sidebar-icon.active { opacity: 1; border-left: 3px solid white; background: rgba(255,255,255,0.1); }
+        .sidebar-footer { position: absolute; bottom: 10px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        /* Header */
+        .top-nav { height: 45px; background-color: var(--alt-top-nav); color: white; display: flex; align-items: center; padding: 0 15px; flex-shrink: 0; position: relative; width: 100%; }
+        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 12px; font-weight: 500; }
+        .nav-center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+        /* Main Content */
+        .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .action-bar { background: white; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e5e7eb; }
+        .tab-btn { padding: 8px 24px; border-radius: 25px; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.3s; }
+        .tab-active { background: var(--alt-accent); color: white; }
+
+        /* Filter Line Styling */
+        .filter-line { background: white; padding: 16px 32px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: flex-end; justify-content: space-between; }
+        .select-label { font-size: 13px; color: #444; margin-bottom: 4px; font-weight: 500; }
+        .custom-select {
+            width: 250px; border: 1.5px solid #000; border-radius: 8px; padding: 8px 12px; font-size: 14px; background: white; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; background-size: 1.2em; cursor: pointer; outline: none;
+        }
+        
+        .search-input { border: 1.5px solid #000; border-radius: 8px; padding: 8px 12px; font-size: 14px; width: 220px; outline: none; }
+        .save-btn { background: #10b981; color: white; padding: 8px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+        .save-btn:hover { background: #059669; }
+
+        /* Table Styling */
+        .content-container { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .alt-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .alt-table th { background: #f8fafc; padding: 14px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+        .alt-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; }
+        .role-row { background: #f1f5f9; font-weight: 700; transition: background 0.2s; }
+        .role-row:hover { background: #e2e8f0; }
+
+        .toggle-bg { transition: all 0.3s ease; }
+        .toggle-dot { transition: all 0.3s ease; }
+        input:checked + .toggle-bg { background-color: #34a853; }
+        input:checked + .toggle-bg .toggle-dot { transform: translateX(1.25rem); }
+
+        /* Modal Styling */
+        #modalOverlay { background: rgba(0,0,0,0.4); display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; }
+        .modal-card { background: white; width: 850px; border-radius: 8px; position: relative; padding: 0; }
+        .close-btn-circle { position: absolute; top: 12px; right: 12px; background: white; border: 1px solid #e2e8f0; color: #ef4444; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 101; }
+        .modal-content-flex { display: flex; padding: 30px; gap: 30px; }
+        .avatar-placeholder { width: 180px; height: 180px; background: #d1d5db; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .avatar-placeholder::after { content: ""; width: 80px; height: 80px; background: white; border-radius: 50%; }
+        .modal-fields { flex: 1; display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
+        .field-group { display: flex; flex-direction: column; gap: 4px; }
+        .field-label { font-size: 14px; color: #374151; font-weight: 500; }
+        .field-input { border: 1.5px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .field-input:focus { border-color: var(--alt-blue); }
+        .modal-footer-btn { display: flex; justify-content: flex-end; padding: 15px 30px; border-top: 1px solid #f3f4f6; }
+        .add-btn-final { background: #3b82f6; color: white; padding: 8px 32px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-nav">
+
+        </header>
+
+        <div class="action-bar">
+            <div class="flex gap-2">
+                <div class="tab-btn tab-active">Workflow Setup</div>
+            </div>
+        </div>
+
+        <div class="filter-line">
+            <div class="flex gap-8">
+                <div>
+                    <div class="select-label">Select Role</div>
+                    <select id="roleFilter" onchange="renderTable()" class="custom-select">
+                        <option value="All">All Roles</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Assistant Manager">Assistant Manager</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="select-label">Select Task Group Status</div>
+                    <select id="statusFilter" onchange="renderTable()" class="custom-select">
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div>
+                    <input type="text" id="roleSearch" onkeyup="renderTable()" placeholder="Type to search..." class="search-input">
+                </div>
+                <button class="save-btn" onclick="alert('Configuration Saved Successfully!')">Save</button>
+            </div>
+        </div>
+
+        <main class="content-container">
+            <table class="alt-table">
+                <thead>
+                    <tr>
+                        <th style="width: 300px;">Role / Group Name</th>
+                        <th>Status</th>
+                        <th class="text-center">Group Status Toggle</th>
+                        <th class="text-center">Order</th>
+                        <th>Task IID</th>
+                        <th>Description</th>
+                        <th class="text-center">View</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Active</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </main>
+    </div>
+
+    <div id="modalOverlay">
+        <div class="modal-card">
+            <div class="close-btn-circle" onclick="closeModal()">×</div>
+            <div class="modal-content-flex">
+                <div class="modal-fields">
+                    <div class="field-group">
+                        <label class="field-label">Role Context</label>
+                        <input type="text" id="displayRole" disabled class="field-input bg-gray-50 text-gray-500 cursor-not-allowed">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Select Group Template</label>
+                        <select id="groupTemplateSelect" class="field-input cursor-pointer">
+                            <option value="Food Management">Food Management</option>
+                            <option value="Labor Management">Labor Management</option>
+                            <option value="Payroll Management">Payroll Management</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-btn">
+                <button class="add-btn-final" onclick="confirmAddGroup()">
+                    <span>+ Add</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TEMPLATES = {
+            "Food Management": [
+                { iid: "Ordering_IID", description: "Ordering", displayOrder: 1 },
+                { iid: "Receiving_IID", description: "Receiving", displayOrder: 2 },
+                { iid: "Transfer_IID", description: "Transfer", displayOrder: 3 },
+                { iid: "Waste_IID", description: "Waste", displayOrder: 4 }
+            ],
+            "Labor Management": [
+                { iid: "Ordering_IID", description: "Ordering", displayOrder: 1 },
+                { iid: "Receiving_IID", description: "Receiving", displayOrder: 2 },
+                { iid: "Transfer_IID", description: "Transfer", displayOrder: 3 },
+                { iid: "Waste_IID", description: "Waste", displayOrder: 4 }
+            ],
+            "Payroll Management": [
+                { iid: "Punch_Exception", description: "Punch Exception", displayOrder: 5 },
+                { iid: "Review_Punches", description: "Review Punches", displayOrder: 6 },
+                { iid: "Misc_Pay", description: "Misc Pay", displayOrder: 7 },
+                { iid: "Approaching_OT", description: "Approaching OT", displayOrder: 8 },
+                { iid: "Payroll_Summary", description: "Payroll Summary", displayOrder: 9 },
+                { iid: "Unbalanced_Punches", description: "Unbalanced Punches", displayOrder: 10 },
+                { iid: "Mismatch_Punch", description: "Mismatch Punch", displayOrder: 11 }
+            ]
+        };
+
+        let appData = [
+            { role: 'Manager', isExpanded: false, taskGroups: [{ groupName: 'Food Management', groupStatus: 'Active', isExpanded: true, tasks: [...TEMPLATES["Food Management"]] }] },
+            { role: 'Assistant Manager', isExpanded: false, taskGroups: [{ groupName: 'Labor Management', groupStatus: 'Active', isExpanded: true, tasks: [...TEMPLATES["Labor Management"]] }] },
+            { role: 'Supervisor', isExpanded: false, taskGroups: [{ groupName: 'Payroll Management', groupStatus: 'Active', isExpanded: true, tasks: [...TEMPLATES["Payroll Management"]] }] }
+        ];
+
+        let currentActiveRole = null;
+
+        function createToggle(isActive, callback) {
+            const label = document.createElement('label');
+            label.className = 'relative inline-flex items-center cursor-pointer';
+            label.innerHTML = `
+                <input type="checkbox" class="sr-only" ${isActive ? 'checked' : ''}>
+                <div class="toggle-bg w-10 h-5 bg-gray-200 rounded-full p-1 shadow-inner">
+                    <div class="toggle-dot bg-white w-3 h-3 rounded-full shadow-md transform ${isActive ? 'translate-x-5' : ''}"></div>
+                </div>
+            `;
+            label.querySelector('input').addEventListener('change', (e) => {
+                e.stopPropagation();
+                callback(e.target.checked);
+            });
+            return label;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const rFilt = document.getElementById('roleFilter').value;
+            const sFilt = document.getElementById('statusFilter').value;
+            const searchVal = document.getElementById('roleSearch').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            appData.forEach(roleObj => {
+                const matchesRoleSelect = (rFilt === 'All' || roleObj.role === rFilt);
+                const matchesSearch = roleObj.role.toLowerCase().includes(searchVal);
+                
+                if (!matchesRoleSelect || !matchesSearch) return;
+
+                const rRow = document.createElement('tr');
+                rRow.className = 'role-row cursor-pointer';
+                rRow.innerHTML = `
+                    <td colspan="9" class="py-3 px-4">
+                        <div class="flex justify-between items-center">
+                            <div onclick="toggleRole('${roleObj.role}')" class="flex items-center gap-2">
+                                <span class="text-gray-400 font-bold">${roleObj.isExpanded ? '▼' : '▶'}</span>
+                                <span>Role: ${roleObj.role}</span>
+                            </div>
+                            <button onclick="openModal('${roleObj.role}')" class="bg-blue-600 text-white text-[11px] uppercase font-bold px-4 py-1.5 rounded-full shadow-sm">+ Add Group</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(rRow);
+
+                if (roleObj.isExpanded) {
+                    roleObj.taskGroups.forEach(group => {
+                        if (sFilt !== 'All' && group.groupStatus !== sFilt) return;
+
+                        const isGroupDisabled = group.groupStatus === 'Inactive';
+                        const gRow = document.createElement('tr');
+                        gRow.innerHTML = `
+                            <td class="pl-10 font-semibold cursor-pointer flex items-center gap-2" onclick="toggleGroup('${roleObj.role}', '${group.groupName}')">
+                                <span class="text-xs opacity-50">${group.isExpanded ? '▼' : '▶'}</span> ${group.groupName}
+                            </td>
+                            <td><span class="text-[10px] font-bold px-3 py-1 rounded-full border ${!isGroupDisabled ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}">${group.groupStatus}</span></td>
+                            <td class="text-center"></td>
+                        `;
+                        gRow.cells[2].appendChild(createToggle(group.groupStatus === 'Active', (v) => { 
+                            group.groupStatus = v ? 'Active' : 'Inactive'; 
+                            renderTable(); 
+                        }));
+                        tbody.appendChild(gRow);
+
+                        if (group.isExpanded) {
+                            group.tasks.forEach(task => {
+                                const tRow = document.createElement('tr');
+                                if (isGroupDisabled) tRow.style.opacity = "0.4";
+                                tRow.innerHTML = `
+                                    <td class="pl-16 text-gray-300">└─────</td>
+                                    <td></td><td></td>
+                                    <td class="text-center text-gray-400 font-medium">${task.displayOrder}</td>
+                                    <td class="font-mono text-xs text-blue-500">${task.iid}</td>
+                                    <td class="text-gray-600">${task.description}</td>
+                                    <td class="text-center"></td><td class="text-center"></td><td class="text-center"></td>
+                                `;
+                                tRow.cells[6].appendChild(createToggle(true, () => {}));
+                                tRow.cells[7].appendChild(createToggle(false, () => {}));
+                                tRow.cells[8].appendChild(createToggle(true, () => {}));
+                                tbody.appendChild(tRow);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function toggleRole(name) {
+            const r = appData.find(x => x.role === name);
+            r.isExpanded = !r.isExpanded;
+            renderTable();
+        }
+
+        function toggleGroup(rName, gName) {
+            const r = appData.find(x => x.role === rName);
+            const g = r.taskGroups.find(x => x.groupName === gName);
+            g.isExpanded = !g.isExpanded;
+            renderTable();
+        }
+
+        function openModal(roleName) {
+            currentActiveRole = roleName;
+            document.getElementById('displayRole').value = roleName;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+        function confirmAddGroup() {
+            const role = appData.find(r => r.role === currentActiveRole);
+            const key = document.getElementById('groupTemplateSelect').value;
+            if (!role.taskGroups.find(g => g.groupName === key)) {
+                role.taskGroups.push({
+                    groupName: key, groupStatus: 'Active', isExpanded: true,
+                    tasks: JSON.parse(JSON.stringify(TEMPLATES[key]))
+                });
+                renderTable();
+            }
+            closeModal();
+        }
+
+        window.onload = renderTable;
+    </script>
+</body>
+</html>
